@@ -1,0 +1,38 @@
+name: Update cons feed
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+
+      - name: 🧹 Run scraper
+        run: python conservatorio_scraper.py
+
+      - name: 📤 Commit changes
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add feed_cons.xml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🔄 Update Atom feed"
+            git push
+          fi
