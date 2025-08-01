@@ -23,7 +23,7 @@ jobs:
           pip install --upgrade pip
 
       - name: 🧹 Run scraper
-        run: python conservatorio_scraper.py
+        run: python feed_cons.py
 
       - name: 📤 Commit changes
         run: |
