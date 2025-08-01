@@ -23,6 +23,7 @@ def fetch_page(url):
 
 
 def extract_news_items(html):
+    print(html)
     items = []
     entries = re.split(r'<div class="news-list-element[^"]*">', html)[1:]
     print(entries)
