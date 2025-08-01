@@ -17,6 +17,21 @@ NAMESPACE = {'atom': 'http://www.w3.org/2005/Atom'}
 ET.register_namespace('', 'http://www.w3.org/2005/Atom')
 
 
+ITALIAN_MONTHS = {
+    "gennaio": 1,
+    "febbraio": 2,
+    "marzo": 3,
+    "aprile": 4,
+    "maggio": 5,
+    "giugno": 6,
+    "luglio": 7,
+    "agosto": 8,
+    "settembre": 9,
+    "ottobre": 10,
+    "novembre": 11,
+    "dicembre": 12
+}
+
 def fetch_page(url):
     req = urllib.request.Request(
         url, 
@@ -29,10 +44,9 @@ def fetch_page(url):
 
 
 def extract_news_items(html):
-    print(html)
     items = []
     entries = re.split(r'<div class="news-list-element[^"]*">', html)[1:]
-    print(entries)
+
     for entry in entries:
         title_match = re.search(r'<h4 class="news-title">(.+?)</h4>', entry, re.DOTALL)
         title = unescape(title_match.group(1).strip()) if title_match else "Senza titolo"
@@ -43,10 +57,19 @@ def extract_news_items(html):
         date_match = re.search(r'<div class="news-date">[^<]*News del ([^<]+)</div>', entry)
         if date_match:
             raw_date = date_match.group(1).strip()
-            try:
-                pub_date = datetime.strptime(raw_date, "%d %B %Y")
-                pub_date = pub_date.replace(tzinfo=UTC)
-            except ValueError:
+
+            date_regex = re.match(r'(\d{1,2}) (\w+) (\d{4})', raw_date.lower())
+            if date_regex:
+                day = int(date_regex.group(1))
+                month_name = date_regex.group(2)
+                year = int(date_regex.group(3))
+
+                month = ITALIAN_MONTHS.get(month_name)
+                if month:
+                    pub_date = datetime(year, month, day, tzinfo=UTC)
+                else:
+                    pub_date = datetime.now(UTC)
+            else:
                 pub_date = datetime.now(UTC)
         else:
             pub_date = datetime.now(UTC)
@@ -133,8 +156,8 @@ def generate_atom_feed(items, output_path=FEED_FILE):
     ET.SubElement(feed, "link", href=BASE_URL, rel="alternate", type="text/html")
     ET.SubElement(feed, "updated").text = updated
     ET.SubElement(feed, "id").text = feed_id
-    ET.SubElement(feed, "title", type="html").text = "Concorsi per gli studenti - Conservatorio Cagliari"
-    ET.SubElement(feed, "subtitle").text = "Ultimi concorsi pubblicati"
+    ET.SubElement(feed, "title", type="html").text = "Comunicazione agli studenti - Conservatorio Cagliari"
+    ET.SubElement(feed, "subtitle").text = "Ultime comunicazioni agli studenti"
 
     for item in items:
         entry = ET.SubElement(feed, "entry")
@@ -143,6 +166,7 @@ def generate_atom_feed(items, output_path=FEED_FILE):
         ET.SubElement(entry, "id").text = item["link"]
         ET.SubElement(entry, "published").text = item["date"]
         ET.SubElement(entry, "updated").text = item["date"]
+        ET.SubElement(entry, "content", type="html").text = f"<p><a href={item["link"]}>{item["link"]}</a></p>" 
         author = ET.SubElement(entry, "author")
         ET.SubElement(author, "name").text = AUTHOR_NAME
         ET.SubElement(entry, "summary", type="html").text = item["title"]
