@@ -25,7 +25,7 @@ def fetch_page(url):
 def extract_news_items(html):
     items = []
     entries = re.split(r'<div class="news-list-element[^"]*">', html)[1:]
-
+    print(entries)
     for entry in entries:
         title_match = re.search(r'<h4 class="news-title">(.+?)</h4>', entry, re.DOTALL)
         title = unescape(title_match.group(1).strip()) if title_match else "Senza titolo"
